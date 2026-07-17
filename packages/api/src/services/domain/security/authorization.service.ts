@@ -3,20 +3,12 @@ import {AuthenticatedUser, Authority, Rights, SecurityConfig} from '../../../mod
 import {service} from '../../../providers';
 import {SecurityContextService} from './security-context.service';
 import {getRepositoryIdWithLocation, Repository, RepositoryReference} from '../../../models/repositories';
-import {
-  RepositoryAuthorityService,
-  RepositoryContextService,
-  RepositoryStorageService
-} from '../repository';
+import {RepositoryAuthorityService, RepositoryContextService, RepositoryStorageService} from '../repository';
 import {RoutingService} from '../../routing/routing.service';
 import {WindowService} from '../../window';
-import {
-  MainMenuExtensionPoint,
-  MainMenuPlugin,
-  RouteExtensionPoint,
-  RoutePlugin
-} from '../../../models/plugins';
+import {MainMenuExtensionPoint, MainMenuPlugin, RouteExtensionPoint, RoutePlugin} from '../../../models/plugins';
 import {getPathName} from '../../utils';
+import {RepositoryPermissionType} from '../../../models/repositories/repository-permission-type';
 
 /**
  * Service responsible for handling authorization-related operations.
@@ -247,6 +239,40 @@ export class AuthorizationService implements Service {
     const activeRepoReference = this.repositoryStorageService.getRepositoryReference();
     const activeRepo = this.repositoryContextService.findRepository(activeRepoReference);
     return this.canReadGqlRepo(activeRepo) || this.canWriteGqlRepo(activeRepo);
+  }
+
+  /**
+   * Returns the highest permission the current user has for the repository.
+   *
+   * @param repository The repository to evaluate.
+   * @returns The highest applicable repository permission.
+   */
+  getRepositoryPermission(repository: Repository): RepositoryPermissionType {
+    if (this.isAdminOrRepoManager()) {
+      return RepositoryPermissionType.MANAGER;
+    }
+
+    if (this.canManageRepo(repository)) {
+      return RepositoryPermissionType.MANAGE;
+    }
+
+    if(this.canWriteGqlRepo(repository)) {
+      return RepositoryPermissionType.GRAPHQL_WRITE;
+    }
+
+    if (this.canReadGqlRepo(repository)) {
+      return RepositoryPermissionType.GRAPHQL_READ;
+    }
+
+    if (this.canWriteRepo(repository)) {
+      return RepositoryPermissionType.WRITE;
+    }
+
+    if (this.canReadRepo(repository)) {
+      return RepositoryPermissionType.READ;
+    }
+
+    return RepositoryPermissionType.NONE;
   }
 
   /**
