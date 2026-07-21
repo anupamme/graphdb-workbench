@@ -9,6 +9,7 @@ import {WindowService} from '../../window';
 import {MainMenuExtensionPoint, MainMenuPlugin, RouteExtensionPoint, RoutePlugin} from '../../../models/plugins';
 import {getPathName} from '../../utils';
 import {RepositoryPermissionType} from '../../../models/repositories/repository-permission-type';
+import {RepositoryPermissionResolver} from '../../../models/security/repository-permission-resolver';
 
 /**
  * Service responsible for handling authorization-related operations.
@@ -18,6 +19,15 @@ export class AuthorizationService implements Service {
   private readonly repositoryStorageService = service(RepositoryStorageService);
   private readonly repositoryContextService = service(RepositoryContextService);
   private readonly repositoryAuthorityService = service(RepositoryAuthorityService);
+
+  /**
+   * Repository permission resolvers ordered from highest to lowest priority.
+   */
+  private readonly permissionResolvers: RepositoryPermissionResolver[];
+
+  constructor() {
+    this.permissionResolvers = this.initPermissionResolvers();
+  }
 
   /**
    * Determines if free access is allowed based on the security configuration.
@@ -242,37 +252,18 @@ export class AuthorizationService implements Service {
   }
 
   /**
-   * Returns the highest permission the current user has for the repository.
+   * Resolves the highest repository permission granted to the current user for the given repository.
    *
-   * @param repository The repository to evaluate.
-   * @returns The highest applicable repository permission.
+   * The first matching resolver is returned. Since the resolvers are ordered from highest to lowest priority,
+   * the returned permission has the highest precedence among all matching resolvers.
+   *
+   * @param {Repository} repository The repository for which to resolve the permission.
+   * @returns {RepositoryPermissionType} The highest granted repository permission, or {@link RepositoryPermissionType.NONE}
+   * if no permission is granted.
    */
   getRepositoryPermission(repository: Repository): RepositoryPermissionType {
-    if (this.isAdminOrRepoManager()) {
-      return RepositoryPermissionType.MANAGER;
-    }
-
-    if (this.canManageRepo(repository)) {
-      return RepositoryPermissionType.MANAGE;
-    }
-
-    if(this.canWriteGqlRepo(repository)) {
-      return RepositoryPermissionType.GRAPHQL_WRITE;
-    }
-
-    if (this.canReadGqlRepo(repository)) {
-      return RepositoryPermissionType.GRAPHQL_READ;
-    }
-
-    if (this.canWriteRepo(repository)) {
-      return RepositoryPermissionType.WRITE;
-    }
-
-    if (this.canReadRepo(repository)) {
-      return RepositoryPermissionType.READ;
-    }
-
-    return RepositoryPermissionType.NONE;
+    return this.permissionResolvers.find((resolver) => resolver.matches(repository))
+      ?.permission ?? RepositoryPermissionType.NONE;
   }
 
   /**
@@ -419,5 +410,45 @@ export class AuthorizationService implements Service {
       user.authorities.hasAuthority(overAllReposGraphql as Authority) ||
       user.authorities.hasWildcardAuthority(overCurrentRepoGraphql, true)
     );
+  }
+
+  /**
+   * Creates and orders the repository permission resolvers from highest to lowest priority.
+   *
+   * @returns {RepositoryPermissionResolver[]} The ordered repository permission resolvers.
+   */
+  private initPermissionResolvers(): RepositoryPermissionResolver[] {
+    return [
+      {
+        priority: 100,
+        permission: RepositoryPermissionType.MANAGER,
+        matches: () => this.isAdminOrRepoManager(),
+      },
+      {
+        priority: 90,
+        permission: RepositoryPermissionType.MANAGE,
+        matches: (repository: Repository) => this.canManageRepo(repository),
+      },
+      {
+        priority: 80,
+        permission: RepositoryPermissionType.GRAPHQL_WRITE,
+        matches: (repository: Repository) => this.canWriteGqlRepo(repository),
+      },
+      {
+        priority: 70,
+        permission: RepositoryPermissionType.GRAPHQL_READ,
+        matches: (repository: Repository) => this.canReadGqlRepo(repository),
+      },
+      {
+        priority: 60,
+        permission: RepositoryPermissionType.WRITE,
+        matches: (repository: Repository) => this.canWriteRepo(repository),
+      },
+      {
+        priority: 50,
+        permission: RepositoryPermissionType.READ,
+        matches: (repository: Repository) => this.canReadRepo(repository),
+      },
+    ].sort((pR1, pR2) => pR2.priority - pR1.priority);
   }
 }
