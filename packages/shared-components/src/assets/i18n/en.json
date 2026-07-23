@@ -98,7 +98,6 @@
         "none": "None",
         "read": "Read",
         "write": "Read/Write",
-        "manager": "Read/Write/Manage",
         "manage": "Read/Write/Manage",
         "graphql_read": "Read (GraphQL only)",
         "graphql_write": "Read/Write (GraphQL only)"

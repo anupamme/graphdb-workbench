@@ -2773,7 +2773,6 @@
     "repository.permission.none": "Aucune",
     "repository.permission.read": "Lecture",
     "repository.permission.write": "Lecture/Écriture",
-    "repository.permission.manager": "Lecture/Écriture/Gestion",
     "repository.permission.manage": "Lecture/Écriture/Gestion",
     "repository.permission.graphql_read": "Lecture (GraphQL uniquement)",
     "repository.permission.graphql_write": "Lecture/Écriture (GraphQL uniquement)",

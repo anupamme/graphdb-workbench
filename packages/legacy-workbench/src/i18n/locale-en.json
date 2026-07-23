@@ -2775,7 +2775,6 @@
     "repository.permission.none": "None",
     "repository.permission.read": "Read",
     "repository.permission.write": "Read/Write",
-    "repository.permission.manager": "Read/Write/Manage",
     "repository.permission.manage": "Read/Write/Manage",
     "repository.permission.graphql_read": "Read (GraphQL only)",
     "repository.permission.graphql_write": "Read/Write (GraphQL only)",

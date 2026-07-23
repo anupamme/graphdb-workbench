@@ -815,7 +815,7 @@ describe('AuthorizationService', () => {
   });
 
   describe('getRepositoryPermission', () => {
-    test('should return manager permission for administrators on all repositories', () => {
+    test('should return manage permission for administrators on all repositories', () => {
       const repository = {id: 'testRepo'} as Repository;
 
       // Given, security is enabled
@@ -832,11 +832,11 @@ describe('AuthorizationService', () => {
 
       // When, I get the user's permission for the repository
       const repositoryPermission = authorizationService.getRepositoryPermission(repository);
-      // Then, the user should have manager permission
-      expect(repositoryPermission).toBe(RepositoryPermissionType.MANAGER);
+      // Then, the user should have manage permission
+      expect(repositoryPermission).toBe(RepositoryPermissionType.MANAGE);
     });
 
-    test('should return manager permission for repository managers on all repositories', () => {
+    test('should return manage permission for repository managers on all repositories', () => {
       const repository = {id: 'testRepo'} as Repository;
 
       // Given, security is enabled
@@ -853,8 +853,8 @@ describe('AuthorizationService', () => {
 
       // When, I get the user's permission for the repository
       const repositoryPermission = authorizationService.getRepositoryPermission(repository);
-      // Then, the user should have manager permission
-      expect(repositoryPermission).toBe(RepositoryPermissionType.MANAGER);
+      // Then, the user should have manage permission
+      expect(repositoryPermission).toBe(RepositoryPermissionType.MANAGE);
     });
 
     test('should return manage permission only for repositories the user is authorized to manage', () => {

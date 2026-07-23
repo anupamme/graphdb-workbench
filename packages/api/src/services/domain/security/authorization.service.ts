@@ -421,31 +421,26 @@ export class AuthorizationService implements Service {
     return [
       {
         priority: 100,
-        permission: RepositoryPermissionType.MANAGER,
-        matches: () => this.isAdminOrRepoManager(),
+        permission: RepositoryPermissionType.MANAGE,
+        matches: (repository: Repository) => this.isAdminOrRepoManager() || this.canManageRepo(repository),
       },
       {
         priority: 90,
-        permission: RepositoryPermissionType.MANAGE,
-        matches: (repository: Repository) => this.canManageRepo(repository),
-      },
-      {
-        priority: 80,
         permission: RepositoryPermissionType.GRAPHQL_WRITE,
         matches: (repository: Repository) => this.canWriteGqlRepo(repository),
       },
       {
-        priority: 70,
+        priority: 80,
         permission: RepositoryPermissionType.GRAPHQL_READ,
         matches: (repository: Repository) => this.canReadGqlRepo(repository),
       },
       {
-        priority: 60,
+        priority: 70,
         permission: RepositoryPermissionType.WRITE,
         matches: (repository: Repository) => this.canWriteRepo(repository),
       },
       {
-        priority: 50,
+        priority: 60,
         permission: RepositoryPermissionType.READ,
         matches: (repository: Repository) => this.canReadRepo(repository),
       },
